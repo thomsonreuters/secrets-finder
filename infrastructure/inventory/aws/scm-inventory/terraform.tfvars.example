@@ -1,0 +1,22 @@
+aws_region       = ""
+aws_profile      = ""
+environment_type = ""
+project_name     = ""
+github_token_secret_name = ""
+permissions_boundary_arn = ""
+s3_bucket_name           = ""
+scanned_org              = ""
+vpc_name                 = "vpc*"
+subnet_name              = "subnet_name*"
+tags = {
+  "mytag" = "tag"
+  "mytag2" = "tag2"
+}
+instance_type                       = ""
+ami_owner                           = ""
+ami_image_filter                    = ""
+aws_default_security_groups_filters = ["Security-Group-1*", "Security-Group-2*"]
+terminate_instance_after_completion = true
+s3_force_delete                     = false
+fetch_issues = false
+fetch_pr = false
