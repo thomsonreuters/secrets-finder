@@ -1,0 +1,26 @@
+name: Syntax, Style and Formatting
+
+on:
+  push:
+      branches:
+      - 'main'
+  pull_request:
+      branches:
+      - 'main'
+
+run-name: "Running \"${{ github.workflow }}\" on change ${{ github.ref_name }}"
+
+# We're basically using the same steps as here - https://github.com/pre-commit/action/blob/main/action.yml
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
+    - uses: actions/cache@v3
+      with:
+        path: ~/.cache/pre-commit
+        key: pre-commit-3|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
+    - run: python -m pip install pre-commit
+    - run: pre-commit run --all-files --show-diff-on-failure --color=always
+      shell: bash
