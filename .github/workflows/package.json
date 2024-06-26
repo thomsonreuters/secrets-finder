@@ -1,0 +1,13 @@
+{
+    "name": "github_api_client",
+    "version": "1.0.0",
+    "license": "MIT",
+    "main": "api.js",
+    "scripts": {
+      "test": "jest"
+    },
+    "author": "Thomson Reuters",
+    "devDependencies": {
+      "jest": "29.7.0"
+    }
+  }
