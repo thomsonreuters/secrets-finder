@@ -1,0 +1,10 @@
+# All these Settings can be set as environment variables, through a .env file, this settings file or command line ArgumentParser
+# The GITHUB_INVENTORY_TOKEN has to be set as an environment variable
+# Uncomment the settings you want to set here
+[default]
+# org = ""
+# dotenv_path = ""
+# issue = false
+# pr = false
+# gql_query_org = ""
+# gql_query_repo = ""

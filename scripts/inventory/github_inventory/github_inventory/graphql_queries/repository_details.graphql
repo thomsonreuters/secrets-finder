@@ -1,0 +1,135 @@
+query RepositoryDetails(
+  $org: String!
+  $repositoryName: String!
+  $pullRequestCursor: String
+  $issueCursor: String
+  $pullRequestStep: Int
+  $issueStep: Int
+  $pullRequestsLabel: [String!]
+  $issuesLabel: [String!]
+) {
+  repository(owner: $org, name: $repositoryName) {
+    id
+    name
+    description
+    createdAt
+    pushedAt
+    updatedAt
+    diskUsage
+    isArchived
+    isDisabled
+    isEmpty
+    isPrivate
+    visibility
+    nameWithOwner
+    owner {
+      login
+    }
+    defaultBranchRef {
+      name
+    }
+    primaryLanguage {
+      name
+    }
+    pullRequests(
+      first: $pullRequestStep
+      after: $pullRequestCursor
+      labels: $pullRequestsLabel
+    ) {
+      totalCount
+      nodes {
+        id
+        number
+        title
+        bodyText
+        isDraft
+        merged
+        mergedAt
+        publishedAt
+        url
+        state
+        author {
+          login
+        }
+        baseRefName
+        baseRepository {
+          name
+        }
+        headRefName
+        createdAt
+        updatedAt
+        # We assume that
+        labels(first: 10) {
+          nodes {
+            name
+          }
+        }
+        assignees(first: 10) {
+          nodes {
+            login
+          }
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+    issues(first: $issueStep, after: $issueCursor, labels: $issuesLabel) {
+      totalCount
+      nodes {
+        id
+        number
+        title
+        bodyText
+        publishedAt
+        url
+        state
+        author {
+          login
+        }
+        createdAt
+        updatedAt
+        closedAt
+        labels(first: 10) {
+          nodes {
+            name
+          }
+        }
+        assignees(first: 10) {
+          nodes {
+            login
+          }
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+    # We decided to limit the number of topics and languages to 10, use a custom query to change it
+    repositoryTopics(first: 10) {
+      totalCount
+      nodes {
+        topic {
+          name
+        }
+      }
+    }
+    languages(first: 10) {
+      totalCount
+      totalSize
+      edges {
+        node {
+          name
+        }
+        size
+      }
+    }
+  }
+  rateLimit {
+    cost
+    remaining
+    resetAt
+  }
+}

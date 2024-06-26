@@ -1,0 +1,70 @@
+query OrganizationRepositories($org: String!,
+$organizationCursor: String
+) {
+    organization(login: $org) {
+        name
+        repositories(first: 100, after: $organizationCursor) {
+            totalCount
+            nodes {
+                id
+                name
+                description
+                createdAt
+                pushedAt
+                updatedAt
+                diskUsage
+                isArchived
+                isDisabled
+                isEmpty
+                isPrivate
+                visibility
+                nameWithOwner
+                owner {
+                    login
+                }
+                defaultBranchRef {
+                    name
+                }
+                primaryLanguage {
+                    name
+                }
+                # This will slow down the query resulting in timeouts and errors for large GitHub organizations
+                # Feel free to enable it if you want to fetch this information for your organization
+                # pullRequests(first: 0) {
+                #     totalCount
+                # }
+                # issues(first: 0) {
+                #     totalCount
+                # }
+                # We also limit the number of topics and languages to 5 to avoid timeouts, but use a custom query to change it
+                repositoryTopics(first: 5) {
+                    totalCount
+                    nodes {
+                        topic {
+                            name
+                        }
+                    }
+                }
+                languages (first: 5) {
+                    totalCount
+                    totalSize
+                    edges {
+                        node {
+                            name
+                        }
+                        size
+                    }
+                }
+            }
+            pageInfo {
+                endCursor
+                hasNextPage
+            }
+        }
+    }
+    rateLimit {
+        cost
+        remaining
+        resetAt
+    }
+}

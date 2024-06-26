@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "github-inventory"
+version = "0.1.0"
+description = "Scripts to pull and maintain a basic github inventory"
+authors = ["Yassine Ilmi <Yassine.Ilmi@thomsonreuters.com>"]
+license = "MIT"
+readme = "README.md"
+include = ["settings.toml", ".env.example", "graphql_queries/*.graphql"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+dynaconf = "^3.2.5"
+requests = "^2.32.3"
+python-dotenv = "^1.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
