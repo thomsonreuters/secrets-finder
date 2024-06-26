@@ -1,0 +1,94 @@
+version: 0.2
+
+env:
+  shell: bash
+
+phases:
+  install:
+    commands:
+      - echo "Installing Terraform"
+      - curl -LO https://releases.hashicorp.com/terraform/$${TERRAFORM_VERSION}/terraform_$${TERRAFORM_VERSION}_linux_amd64.zip
+      - curl -LO https://releases.hashicorp.com/terraform/$${TERRAFORM_VERSION}/terraform_$${TERRAFORM_VERSION}_SHA256SUMS.sig
+      - curl -LO https://releases.hashicorp.com/terraform/$${TERRAFORM_VERSION}/terraform_$${TERRAFORM_VERSION}_SHA256SUMS
+      - shasum -a 256 -c terraform_$${TERRAFORM_VERSION}_SHA256SUMS 2>&1 | grep OK
+      - gpg --keyserver keyserver.ubuntu.com --recv-keys C874011F0AB405110D02105534365D9472D7468F
+      - gpg --verify terraform_$${TERRAFORM_VERSION}_SHA256SUMS.sig terraform_$${TERRAFORM_VERSION}_SHA256SUMS
+      - unzip terraform_$${TERRAFORM_VERSION}_linux_amd64.zip && chmod +x terraform
+      - mv terraform /usr/local/bin/
+
+  pre_build:
+    commands:
+      - |
+        if ! [[ -z "$GITHUB_TOKEN" ]]; then
+          git clone https://oauth2:$GITHUB_TOKEN@github.com/$GITHUB_ORG_SECRETS_FINDER/$GITHUB_REPOSITORY_SECRETS_FINDER.git
+        else
+          git clone https://github.com/$GITHUB_ORG_SECRETS_FINDER/$GITHUB_REPOSITORY_SECRETS_FINDER.git
+        fi
+      - cd "$GITHUB_REPOSITORY_SECRETS_FINDER/infrastructure/secrets-finder/scheduled-scans/aws/scan"
+      - sed -i '/profile *=/d' "providers.tf"
+
+  build:
+    commands:
+      - sed -i '/profile *=/d' "s3.tfbackend"
+
+      - terraform init --reconfigure -backend-config=s3.tfbackend
+
+      - |
+        function insert_or_replace_in_terraform_tfvars() {
+            pattern=$1
+            line=$2
+            file="terraform.tfvars"
+
+            if [ -f "$file" ]; then
+                grep -v "^$pattern" "$file" > temp && mv temp "$file"
+            fi
+
+            echo "$line" >> "$file"
+        }
+
+        if ! [[ -z "$DATADOG_API_KEY_REFERENCE" ]]; then
+          insert_or_replace_in_terraform_tfvars "datadog_api_key_reference *=" "datadog_api_key_reference = \"$DATADOG_API_KEY_REFERENCE\""
+        else
+          insert_or_replace_in_terraform_tfvars "datadog_api_key_reference *=" "datadog_api_key_reference = null"
+        fi
+
+        if ! [[ -z "$DATADOG_ACCOUNT_NAME" ]]; then
+          insert_or_replace_in_terraform_tfvars "datadog_enable_ec2_instance_metrics *=" "datadog_enable_ec2_instance_metrics = true"
+          insert_or_replace_in_terraform_tfvars "datadog_account *=" "datadog_account = \"$DATADOG_ACCOUNT_NAME\""
+        else
+          insert_or_replace_in_terraform_tfvars "datadog_enable_ec2_instance_metrics *=" "datadog_enable_ec2_instance_metrics = false"
+          insert_or_replace_in_terraform_tfvars "datadog_account *=" "datadog_account = null"
+        fi
+
+        insert_or_replace_in_terraform_tfvars "vpc_name *=" "vpc_name = \"$VPC_NAME\""
+        insert_or_replace_in_terraform_tfvars "subnet_name *=" "subnet_name = \"$SUBNET_NAME\""
+        insert_or_replace_in_terraform_tfvars "s3_bucket_name *=" "s3_bucket_name = \"$S3_BUCKET_NAME\""
+        insert_or_replace_in_terraform_tfvars "instance_user *=" "instance_user = \"$INSTANCE_USER\""
+
+        if [[ -n $SNS_TOPIC_ARN ]]; then
+          insert_or_replace_in_terraform_tfvars "sns_topic_arn *=" "sns_topic_arn = \"$SNS_TOPIC_ARN\""
+        fi
+
+      - |
+        # Execution of scans
+        error_encountered="false"
+        failed_scans=()
+        trap 'error_encountered="true"; if ! [[ " $${failed_scans[@]} " =~ " $${scan_being_executed} " ]]; then failed_scans+=("$scan_being_executed"); fi' ERR
+
+        %{ for scan in scans ~}
+        scan_being_executed="${scan.identifier}"
+        echo "Starting scan: $scan_being_executed"
+        terraform apply --auto-approve -input=false -var="scm=${scan.scm}" -var="scan_identifier=${scan.identifier}" -var="credentials_reference=${scan.credentials_reference}" -var="instance_type=${scan.ec2_instance_type}"
+        if terraform state list | grep -q "aws_instance.secrets_finder"; then
+            terraform state rm aws_instance.secrets_finder
+        fi
+
+        %{ endfor ~}
+        trap - ERR
+        if [ "$error_encountered" == "true" ]; then
+          if [ -n "$SNS_TOPIC_ARN" ]; then
+            formatted_list_of_failed_scans=$(printf "%s\n" "$${failed_scans[@]}" | sort -u | paste -sd,- | sed 's/,$//')
+            aws sns publish --topic-arn $SNS_TOPIC_ARN --subject "[SECRETS FINDER]" --message "One or several scans failed to start (cf. CodeBuild Project logs): $formatted_list_of_failed_scans"
+          fi
+          exit 1
+        fi

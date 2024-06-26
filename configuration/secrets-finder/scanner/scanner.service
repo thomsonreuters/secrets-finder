@@ -1,0 +1,14 @@
+[Unit]
+Description=Execute a secrets detection scan
+After=network.target
+
+[Service]
+Type=oneshot
+User=${instance_user}
+EnvironmentFile=/etc/secrets-finder.env
+ExecStart=/bin/bash -c 'export SECRETS_FINDER_SCAN_UUID=$(cat "${scanner_folder}/uuid.txt") && source "${scanner_folder}/venv/bin/activate" && python3 "${scanner_folder}/scanner.py" && deactivate'
+ExecStartPost=/bin/bash -c 'export SECRETS_FINDER_SCAN_UUID=$(cat "${scanner_folder}/uuid.txt") && source "${scanner_folder}/venv/bin/activate" && python3 "${scanner_folder}/finalizer.py" && deactivate'
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

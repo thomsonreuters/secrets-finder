@@ -1,0 +1,42 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://www.thomsonreuters.com/secrets-finder/scheduled-scans/scan-configuration.schema.json",
+    "title": "Secrets Finder: Scan configuration",
+    "description": "A configuration file specifying the repositories to scan for secrets.",
+    "properties": {
+        "scm": {"type": "string", "enum": ["github", "azure_devops", "custom"]},
+        "endpoint": {"type": "string", "format": "uri"},
+        "repositories": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "organization": {"type": "string"},
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the repository",
+                        "minLength": 1
+                    },
+                    "since-commit": {
+                        "type": "string",
+                        "description": "The commit since which to scan"
+                    },
+                    "branch": {
+                        "type": "string",
+                        "description": "The branch to scan"
+                    },
+                    "max-depth": {
+                        "type": "integer",
+                        "description": "The maximum depth to scan"
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                },
+                "required": ["organization", "name"]
+            }
+        }
+    },
+    "required": ["scm", "repositories", "endpoint"]
+}

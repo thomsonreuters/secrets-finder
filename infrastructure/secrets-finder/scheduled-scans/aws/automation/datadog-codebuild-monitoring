@@ -1,0 +1,14 @@
+{{#is_alert}}
+The Codebuild project has failed: [{{projectname.name}}](https://${aws_region}.console.aws.amazon.com/codesuite/codebuild/${aws_account_id}/projects/{{projectname.name}})
+
+<br />
+
+In case of a one-time error, run the build manually from the AWS console or using the AWS CLI.
+
+<br />
+
+{{/is_alert}}
+{{#is_no_data}}
+The Codebuild project does not report data anymore: [{{projectname.name}}](https://${aws_region}.console.aws.amazon.com/codesuite/codebuild/${aws_account_id}/projects/{{projectname.name}})
+{{/is_no_data}}
+${notification_recipients}

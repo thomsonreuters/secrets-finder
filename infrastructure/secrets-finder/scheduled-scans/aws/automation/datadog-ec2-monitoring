@@ -1,0 +1,18 @@
+{{#is_alert}}
+The following EC2 instance has been running for more than ${limit} hours: [{{host.name}}](https://${aws_region}.console.aws.amazon.com/ec2/home?region=${aws_region}#InstanceDetails:instanceId={{host.name}})
+
+<br/>
+
+Please terminate the EC2 instance from the AWS console or using the AWS CLI if no active scan is running to avoid unnecessary costs.
+
+<br />
+
+If the scanning phase is not progressing, you may want to gracefully terminate TruffleHog and manually send the results of the scan to the S3 bucket before terminating the instance.
+
+<br/>
+
+[**Dashboard**](https://app.datadoghq.com/dash/host_name/{{host.name}})
+
+[**Information about host**](https://app.datadoghq.com/infrastructure?host={{host.name}})
+{{/is_alert}}
+${notification_recipients}
