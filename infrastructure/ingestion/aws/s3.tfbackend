@@ -1,0 +1,5 @@
+bucket         = "<bucket_name>"
+key            = "<tf_state_s3_path>"
+region         = "<aws_region>"
+dynamodb_table = "<dynamodb_table>"
+profile        = "<aws_profile>"
