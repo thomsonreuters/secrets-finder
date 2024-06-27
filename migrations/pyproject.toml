@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "migrate"
+version = "0.1.0"
+description = "DB configuration and migration scripts"
+authors = ["Thomson Reuters <secrets-finder@thomsonreuters.com>"]
+license = "MIT"
+readme = "README.md"
+include = ["alembic.ini", "db/*", "db/versions/*"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+alembic = "^1.13.1"
+psycopg2-binary = "^2.9.9"
+
+[tool.poetry-plugin-lambda-build]
+package_artifact_path = "migration.zip"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

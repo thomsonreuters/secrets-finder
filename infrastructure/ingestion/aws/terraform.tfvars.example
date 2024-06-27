@@ -1,0 +1,17 @@
+aws_region                = ""
+aws_profile               = ""
+environment_type          = ""
+project_name              = ""
+vpc_name                  = ""
+subnet_name               = ""
+db_subnet_group_name      = ""
+permissions_boundary_arn  = ""
+s3_bucket_name            = ""
+tags = {
+    "mytag"  = "tag"
+    "mytag2" = "tag2"
+}
+rds_username              = ""
+rds_db_name               = ""
+ingestion_schedule        = ""
+disable_ingestion_schedule = ""

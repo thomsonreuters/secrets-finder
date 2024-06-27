@@ -1,0 +1,95 @@
+{
+	"Comment": "Ingestion State Machine",
+	"StartAt": "BootStrapState",
+	"States": {
+		"BootStrapState": {
+			"Type": "Task",
+			"Resource": "${migrate_lambda_arn}",
+			"Next": "IngestionState"
+		},
+		"IngestionState": {
+			"Type": "Parallel",
+			"Branches": [
+				{
+					"Comment": "Ingest Scheduled Scan Findings",
+					"StartAt": "ListScheduledScanFindingsFiles",
+					"States": {
+						"ListScheduledScanFindingsFiles": {
+							"Type": "Task",
+							"Resource": "${ingestion_lambda_arn}",
+							"ResultPath": "$.lambdaResult",
+							"Parameters": {
+								"action": "list_files",
+								"prefix": "secrets-finder/scheduled-scans/results/"
+							},
+							"Next": "IngestScheduledScanFindingsFiles"
+						},
+						"IngestScheduledScanFindingsFiles": {
+							"Type": "Map",
+							"ItemsPath": "$.lambdaResult.body.files",
+							"Parameters": {
+								"index.$": "$$.Map.Item.Index",
+								"key.$": "$$.Map.Item.Value"
+							},
+							"Iterator": {
+								"StartAt": "IngestScheduledScanFindings",
+								"States": {
+									"IngestScheduledScanFindings": {
+										"Type": "Task",
+										"Resource": "${ingestion_lambda_arn}",
+										"Parameters": {
+											"action": "ingest_findings",
+											"file_key.$": "$.key"
+										},
+										"End": true
+									}
+								}
+							},
+							"End": true
+						}
+					}
+				},
+				{
+					"Comment": "Ingest Ongoing Scan Findings",
+					"StartAt": "ListOngoingScanFindingsFiles",
+					"States": {
+						"ListOngoingScanFindingsFiles": {
+							"Type": "Task",
+							"Resource": "${ingestion_lambda_arn}",
+							"ResultPath": "$.lambdaResult",
+							"Parameters": {
+								"action": "list_files",
+								"prefix": "secrets-finder/ongoing-scans/results/"
+							},
+							"Next": "IngestOngoingScanFindingsFiles"
+						},
+						"IngestOngoingScanFindingsFiles": {
+							"Type": "Map",
+							"ItemsPath": "$.lambdaResult.body.files",
+							"Parameters": {
+								"index.$": "$$.Map.Item.Index",
+								"key.$": "$$.Map.Item.Value"
+							},
+							"Iterator": {
+								"StartAt": "IngestOngoingScanFindings",
+								"States": {
+									"IngestOngoingScanFindings": {
+										"Type": "Task",
+										"Resource": "${ingestion_lambda_arn}",
+										"Parameters": {
+											"action": "ingest_findings",
+											"file_key.$": "$.key"
+										},
+										"End": true
+									}
+								}
+							},
+							"End": true
+						}
+					}
+				}
+			],
+			"End": true
+		}
+	}
+}

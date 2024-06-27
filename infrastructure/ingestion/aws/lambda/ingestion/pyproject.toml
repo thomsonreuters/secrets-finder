@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "ingestion"
+version = "0.1.0"
+description = "Lambda to ingest data into the data lake"
+authors = ["Thomson Reuters <secrets-finder@thomsonreuters.com>"]
+license = "mit"
+readme = "README.md"
+include = ["modules/*.py", "modules/common/*"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+boto3 = "^1.34.130"
+sqlalchemy = "^2.0.31"
+psycopg2-binary = "^2.9.9"
+
+[tool.poetry-plugin-lambda-build]
+package_artifact_path = "ingestion.zip"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
